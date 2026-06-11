@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reserveage · Resveratrol Performance Analysis</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0f172a;--panel:#1e293b;--card:#273549;--border:#334155;--rsv:#7c3aed;--cat:#22c55e;--comp:#06b6d4;--warn:#ef4444;--gold:#f59e0b;--text:#f1f5f9;--muted:#94a3b8}
+body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--text)}
+.nav{background:var(--panel);border-bottom:1px solid var(--border);padding:8px 16px;display:flex;align-items:center;gap:4px;position:sticky;top:0;z-index:100;flex-wrap:wrap}
+.nav-brand{font-size:11px;font-weight:800;color:var(--rsv);margin-right:8px;white-space:nowrap}
+.nsep{width:1px;height:14px;background:var(--border);margin:0 2px}
+.ngrp{font-size:9px;color:var(--muted);font-weight:700;letter-spacing:.4px;padding:0 2px;white-space:nowrap}
+.nb{background:transparent;border:1px solid var(--border);color:var(--muted);padding:3px 9px;border-radius:14px;cursor:pointer;font-size:10px;font-weight:600;transition:all .15s;white-space:nowrap}
+.nb:hover,.nb.active{background:var(--rsv);color:#fff;border-color:var(--rsv)}
+.nb.new{border-color:var(--gold)!important;color:var(--gold)!important}
+.nb.new.active{background:var(--gold);color:#0f172a!important;border-color:var(--gold)!important}
+.slide{display:none;padding:16px 20px;animation:fi .25s ease}.slide.active{display:block}
+@keyframes fi{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.g31{display:grid;grid-template-columns:2fr 1fr;gap:12px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
+.mb{margin-bottom:12px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px}
+.card h3,.cpanel h3{font-size:9px;font-weight:700;color:var(--muted);margin-bottom:9px;text-transform:uppercase;letter-spacing:.5px}
+.cpanel{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:12px}
+.shdr{margin-bottom:13px}
+.badge{display:inline-block;font-size:8.5px;font-weight:700;padding:1px 7px;border-radius:14px;letter-spacing:.7px;margin-bottom:5px}
+.bp{background:rgba(124,58,237,.2);color:var(--rsv)}.bg2{background:rgba(245,158,11,.2);color:var(--gold)}.bt{background:rgba(6,182,212,.2);color:var(--comp)}.bgg{background:rgba(34,197,94,.2);color:var(--cat)}
+.shdr h2{font-size:19px;font-weight:800}
+.shdr p{font-size:11px;color:var(--muted);margin-top:3px}
+.src-tag{display:inline-block;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:9px;margin-left:4px;vertical-align:middle}
+.st-s{background:rgba(6,182,212,.14);color:var(--comp);border:1px solid rgba(6,182,212,.28)}
+.st-n{background:rgba(245,158,11,.14);color:var(--gold);border:1px solid rgba(245,158,11,.28)}
+.st-b{background:rgba(124,58,237,.14);color:var(--rsv);border:1px solid rgba(124,58,237,.28)}
+.notice{border-radius:6px;padding:7px 10px;margin-bottom:10px;font-size:10.5px;line-height:1.5}
+.nt{background:rgba(6,182,212,.06);border:1px solid rgba(6,182,212,.18)}.nt strong{color:var(--comp)}
+.ng{background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.18)}.ng strong{color:var(--gold)}
+.kpi-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 13px;flex:1;min-width:115px}
+.kpi .lbl{font-size:8.5px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:3px}
+.kpi .val{font-size:21px;font-weight:800;line-height:1}
+.kpi .sub{font-size:9px;margin-top:2px}
+.red{color:var(--warn)}.green{color:var(--cat)}.purple{color:var(--rsv)}.gold{color:var(--gold)}.teal{color:var(--comp)}
+.ch{position:relative;height:210px}.ch-sm{position:relative;height:165px}.ch-lg{position:relative;height:265px}
+.ins{border-left:3px solid;border-radius:0 5px 5px 0;padding:7px 10px;margin-top:7px;font-size:10px;line-height:1.5}
+.ins.warn{background:rgba(239,68,68,.06);border-color:var(--warn)}
+.ins.ok{background:rgba(34,197,94,.06);border-color:var(--cat)}
+.ins.info{background:rgba(6,182,212,.06);border-color:var(--comp)}
+.ins.pur{background:rgba(124,58,237,.07);border-color:var(--rsv)}
+.ins strong{display:block;font-size:10px;margin-bottom:1px}
+.tbl{width:100%;border-collapse:collapse;font-size:10px}
+.tbl th{background:rgba(255,255,255,.04);color:var(--muted);font-size:8.5px;text-transform:uppercase;letter-spacing:.3px;padding:5px 6px;text-align:right}
+.tbl th:first-child{text-align:left}
+.tbl td{padding:5px 6px;border-top:1px solid var(--border);text-align:right;vertical-align:middle}
+.tbl td:first-child{text-align:left;font-weight:600}
+.tbl tr:hover td{background:rgba(255,255,255,.02)}
+.pill{display:inline-block;padding:1px 5px;border-radius:5px;font-size:8.5px;font-weight:700}
+.pr{background:rgba(239,68,68,.2);color:#fca5a5}.pg{background:rgba(34,197,94,.2);color:#86efac}
+.pm{background:rgba(148,163,184,.13);color:var(--muted)}.pp{background:rgba(124,58,237,.2);color:#c4b5fd}
+.py{background:rgba(245,158,11,.2);color:#fcd34d}.pt{background:rgba(6,182,212,.2);color:#67e8f9}
+.br{display:flex;align-items:center;gap:6px;margin-bottom:5px}
+.br .lbl{font-size:9.5px;width:130px;flex-shrink:0;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.br .track{flex:1;background:rgba(255,255,255,.06);border-radius:2px;height:11px;overflow:hidden}
+.br .fill{height:100%;border-radius:2px}
+.br .val{font-size:9.5px;font-weight:700;width:55px;text-align:right;flex-shrink:0}
+.mp-row{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px}
+.mp{background:var(--card);border:1px solid var(--border);border-radius:7px;padding:8px 11px;flex:1;min-width:95px}
+.mp .per{font-size:8.5px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.3px;margin-bottom:2px}
+.mp .pval{font-size:17px;font-weight:800}
+.mp .psub{font-size:8.5px;color:var(--muted);margin-top:1px}
+.tg{display:flex;background:var(--panel);border:1px solid var(--border);border-radius:5px;overflow:hidden;width:fit-content;margin-bottom:9px}
+.tg button{padding:3px 10px;font-size:10px;font-weight:600;cursor:pointer;border:none;background:none;color:var(--muted);transition:all .15s}
+.tg button.on{background:var(--gold);color:#0f172a}
+.pfl{list-style:none}
+.pfl li{padding:4px 0;border-bottom:1px solid rgba(255,255,255,.04);display:flex;gap:6px;font-size:10px;line-height:1.5}
+.pfl li:last-child{border:none}
+.chk{color:var(--cat);font-weight:800;flex-shrink:0}
+.stbl{max-height:210px;overflow-y:auto}
+.stbl::-webkit-scrollbar{width:3px}
+.stbl::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.data-src{font-size:9px;color:#475569;margin-top:4px;font-style:italic}
+.proof-box{background:rgba(34,197,94,.05);border:1px solid rgba(34,197,94,.16);border-radius:8px;padding:11px}
+.proof-box .ptitle{font-size:13px;font-weight:800;color:var(--cat);margin-bottom:5px}
+.highlight-box{border-radius:7px;padding:10px 13px}
+@media(max-width:768px){.g2,.g3,.g31,.g4{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="nav">
+  <div class="nav-brand">📊 RESERVEAGE · RESVERATROL</div>
+  <div class="nsep"></div>
+  <div class="ngrp">52W</div>
+  <button class="nb active" onclick="show(0)">Summary</button>
+  <button class="nb" onclick="show(1)">Distribution</button>
+  <button class="nb new" onclick="show(2)">TVS (Vitamin Shoppe)</button>
+  <button class="nb" onclick="show(3)">Competitors</button>
+  <button class="nb new" onclick="show(4)">Promo Analysis</button>
+  <button class="nb" onclick="show(5)">Collagen Myth</button>
+  <div class="nsep"></div>
+  <div class="ngrp">RECENT ✦</div>
+  <button class="nb new" onclick="show(6)">24W / YTD</button>
+  <button class="nb new" onclick="show(7)">SKU Dive</button>
+  <button class="nb new" onclick="show(8)">Other Categories</button>
+  <button class="nb" onclick="show(9)">What Worked</button>
+</div>
+
+<!-- S0: EXECUTIVE SUMMARY -->
+<div class="slide active" id="s0">
+  <div class="shdr"><div class="badge bp">STRATEGIC REVIEW · CONFIDENTIAL</div><h2>Reserveage Resveratrol — Performance Diagnosis</h2>
+  <p><span class="src-tag st-s">SPINS POS</span> Natural Expanded + Vitamin Shoppe / GNC Key Account, 52W &amp; Recent Windows ending 05/17/2026 &nbsp;|&nbsp; <span class="src-tag st-n">NetSuite / TCC</span> Wholesale B2B 2020–2026 &nbsp;|&nbsp; <span class="src-tag st-s">SPINS POS</span> Conditioning Category 52W</p></div>
+  <div class="notice nt mb"><strong>📌 Two data sources, two lenses:</strong> <span class="src-tag st-s">SPINS POS</span> = consumer retail sell-through (Natural Expanded Channel + Vitamin Shoppe / GNC Key Account). Measures TDP (shelf presence/distribution), velocity ($/TDP), market share. &nbsp;|&nbsp; <span class="src-tag st-n">NetSuite / TCC</span> = what accounts ordered wholesale from Reserveage (sell-in). Measures B2B revenue by account.</div>
+  <div class="notice ng mb"><strong>📌 CVS · Walgreens · KeHe:</strong> Reserveage proactively exited these channels due to low margin and payment issues — not consumer rejection. Revenue loss (~$600K) is real but narrative differs from a market-driven defeat.</div>
+  <div class="kpi-row">
+    <div class="kpi"><div class="lbl">Natural Channel POS (52W)</div><div class="val purple">$759K</div><div class="sub red">▼ −4.7% YoY <span class="src-tag st-s">SPINS</span></div></div>
+    <div class="kpi"><div class="lbl">Vitamin Shoppe POS (52W)</div><div class="val red">$1.45M</div><div class="sub red">▼ −14.5% YoY <span class="src-tag st-s">SPINS</span></div></div>
+    <div class="kpi"><div class="lbl">VS Gummies Delisted</div><div class="val red">−$57K</div><div class="sub red">$57K → $25 supply chain</div></div>
+    <div class="kpi"><div class="lbl">Top SKU TDP Loss</div><div class="val red">−33.8%</div><div class="sub red">500mg 60ct at VS</div></div>
+    <div class="kpi"><div class="lbl">Latest 4W Signal</div><div class="val green">+2.5%</div><div class="sub green">▲ Natural channel stabilizing</div></div>
+  </div>
+  <div class="g31">
+    <div class="cpanel">
+      <h3>Corrected Root Causes <span class="src-tag st-b">Both Sources</span></h3>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;gap:7px;align-items:flex-start"><span style="background:rgba(239,68,68,.17);color:#fca5a5;font-size:8px;font-weight:700;padding:2px 5px;border-radius:7px;white-space:nowrap;margin-top:2px">CAUSE #1</span><div style="font-size:10.5px"><strong>Vitamin Shoppe −14.5%: TDP loss + gummies supply chain delisting.</strong> <span class="src-tag st-s">SPINS</span> 500mg 60ct at VS: TDP −33.8%. Gummies went from $57K → $25 (supply chain issue). 250mg 120ct lost $137K alone. These are the primary drivers of the VS decline.</div></div>
+        <div style="display:flex;gap:7px;align-items:flex-start"><span style="background:rgba(239,68,68,.17);color:#fca5a5;font-size:8px;font-weight:700;padding:2px 5px;border-radius:7px;white-space:nowrap;margin-top:2px">CAUSE #2</span><div style="font-size:10.5px"><strong>Reserveage reducing promo at VS — but promo lift is high.</strong> Promo % at VS fell from 52.8% YA to 43.5% (24W). Promo lift is 36.5% — meaning when on promo, it sells very well. Reducing promo without compensating TDP support accelerated the decline.</div></div>
+        <div style="display:flex;gap:7px;align-items:flex-start"><span style="background:rgba(239,68,68,.17);color:#fca5a5;font-size:8px;font-weight:700;padding:2px 5px;border-radius:7px;white-space:nowrap;margin-top:2px">CAUSE #3</span><div style="font-size:10.5px"><strong>UNFI/WFM SKU rationalization confirmed by both datasets.</strong> <span class="src-tag st-n">NetSuite</span>: UNFI dropped 1000mg after 2023 ($269K → $0). <span class="src-tag st-s">SPINS</span>: Natural channel 500mg TDP −31.7%. Two datasets confirm the same shelf impact.</div></div>
+        <div style="display:flex;gap:7px;align-items:flex-start"><span style="background:rgba(245,158,11,.17);color:#fcd34d;font-size:8px;font-weight:700;padding:2px 5px;border-radius:7px;white-space:nowrap;margin-top:2px">CAUSE #4</span><div style="font-size:10.5px"><strong>Strategic exits (CVS/Walgreens/KeHe) — margin, not market.</strong> <span class="src-tag st-n">NetSuite</span>: ~$600K removed. Proactive Reserveage decision. Not demand or competitive loss.</div></div>
+        <div style="display:flex;gap:7px;align-items:flex-start"><span style="background:rgba(239,68,68,.17);color:#fca5a5;font-size:8px;font-weight:700;padding:2px 5px;border-radius:7px;white-space:nowrap;margin-top:2px">CAUSE #5</span><div style="font-size:10.5px"><strong>New entrants (Rho Nutrition, Force Factor) took VS shelf space.</strong> Rho: 0 → $320K at VS. Force Factor NAD+ Longevity: 0 → $75K at TVS retail. Both new, no promo history — pure TDP expansion at Reserveage's expense.</div></div>
+        <div style="display:flex;gap:7px;align-items:flex-start"><span style="background:rgba(34,197,94,.17);color:#86efac;font-size:8px;font-weight:700;padding:2px 5px;border-radius:7px;white-space:nowrap;margin-top:2px">MYTH BUSTED</span><div style="font-size:10.5px"><strong>Collagen powder drop did NOT cause resveratrol decline.</strong> Powder customers' resveratrol grew every year 2020–2023 after powder was discontinued. The chews supply chain issue is a separate event — both independent of resveratrol trends.</div></div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:9px">
+      <div class="card" style="text-align:center;padding:12px"><div style="font-size:29px;font-weight:900;color:var(--warn)">$1.45M</div><div style="font-size:9px;color:var(--muted);margin-top:2px">Reserveage at VS (52W)<br>was $1.70M (2YA)</div></div>
+      <div class="card" style="text-align:center;padding:12px"><div style="font-size:29px;font-weight:900;color:var(--warn)">−33.8%</div><div style="font-size:9px;color:var(--muted);margin-top:2px">500mg TDP at VS<br>Distribution loss</div></div>
+      <div class="card" style="text-align:center;padding:12px"><div style="font-size:29px;font-weight:900;color:var(--cat)">+21.9%</div><div style="font-size:9px;color:var(--muted);margin-top:2px">Velocity where stocked<br>Demand is intact</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- S1: DISTRIBUTION -->
+<div class="slide" id="s1">
+  <div class="shdr"><div class="badge bp">DISTRIBUTION ANALYSIS</div><h2>Distribution Loss, Not Demand Failure <span class="src-tag st-s">SPINS POS</span></h2><p>TDP = shelf presence. When TDP falls but $/TDP rises, stores that stock the product sell more of it — the problem is access, not demand. This is key for retailer conversations.</p></div>
+  <div class="notice nt mb"><strong>📌 The diagnostic logic:</strong> If consumer demand were failing, BOTH TDP and velocity ($/TDP) would decline together. When TDP falls but $/TDP rises — as seen across Reserveage's core SKUs — the product is being delisted from stores but selling well in stores that still carry it. This is a <em>shelf-access problem</em>, not a product problem. SPINS velocity data is the strongest argument for re-listing.</div>
+  <div class="g2 mb">
+    <div class="card"><h3>TDP vs Velocity per SKU — Natural Channel 52W <span class="src-tag st-s">SPINS</span></h3><div class="ch-lg"><canvas id="c-tdp-decomp"></canvas></div>
+      <div class="ins pur"><strong>📌 6 of 9 active SKUs: distribution loss but demand intact</strong>500mg 60ct: TDP −31.7% but velocity +21.9%. 100mg 60ct: TDP −30.4%, velocity +37.3%. Bergamot shows what healthy looks like: both TDP and velocity growing.</div></div>
+    <div class="card"><h3>TDP vs $ YoY — All Time Windows <span class="src-tag st-s">SPINS</span></h3><div class="ch-lg"><canvas id="c-tdp-periods"></canvas></div>
+      <div class="ins warn"><strong>⚠ Dollar recovery is price/velocity-driven, not distribution recovery</strong>4W: dollars +2.5% but TDP still −7.0%. Sustainable revenue growth requires TDP stabilization. Current momentum is fragile without distribution recovery.</div></div>
+  </div>
+  <div class="g2">
+    <div class="card"><h3>Competitor TDP Build <span class="src-tag st-s">SPINS</span></h3><div class="ch"><canvas id="c-comp-tdp"></canvas></div>
+      <div class="ins warn"><strong>⚠ Rho Nutrition: 0 → 20.6 TDP in one year</strong>The shelf space Reserveage lost went somewhere. Rho built distribution rapidly in the natural channel while Reserveage's TDP contracted.</div></div>
+    <div class="card"><h3>SKU Diagnosis Table <span class="src-tag st-s">SPINS Natural Channel 52W</span></h3>
+      <table class="tbl"><thead><tr><th>SKU</th><th>TDP Δ</th><th>Vel. Δ</th><th>$ Δ</th><th>Verdict</th></tr></thead><tbody>
+        <tr><td>500mg 60ct</td><td class="red">−31.7%</td><td class="green">+21.9%</td><td class="red">−16.7%</td><td><span class="pill pp">Distrib. loss</span></td></tr>
+        <tr><td>100mg 60ct</td><td class="red">−30.4%</td><td class="green">+37.3%</td><td class="red">−3.4%</td><td><span class="pill pp">Distrib. loss</span></td></tr>
+        <tr><td>250mg 60ct</td><td class="red">−9.1%</td><td class="green">+1.4%</td><td class="red">−7.7%</td><td><span class="pill pp">Distrib. loss</span></td></tr>
+        <tr><td>250mg 30ct</td><td class="red">−8.9%</td><td class="pm">+0.1%</td><td class="red">−8.8%</td><td><span class="pill pp">Distrib. loss</span></td></tr>
+        <tr><td>500mg 30ct</td><td class="red">−13.0%</td><td class="red">−5.0%</td><td class="red">−17.4%</td><td><span class="pill pr">Both weak</span></td></tr>
+        <tr><td>100mg Gummies</td><td class="red">−20.5%</td><td class="red">−9.4%</td><td class="red">−28.0%</td><td><span class="pill pr">Both weak</span></td></tr>
+        <tr><td>Bergamot Chol.</td><td class="green">+6.9%</td><td class="green">+11.1%</td><td class="green">+18.8%</td><td><span class="pill pg">Both strong</span></td></tr>
+        <tr><td>RSV+Pterostilb.</td><td class="red">−3.0%</td><td class="green">+15.3%</td><td class="green">+11.8%</td><td><span class="pill pt">Vel. driven</span></td></tr>
+        <tr><td>RSV Plus 1000mg</td><td class="green">+386%</td><td class="pm">+4.4%</td><td class="green">+407%</td><td><span class="pill pg">New distrib.</span></td></tr>
+      </tbody></table>
+      <div class="ins ok" style="margin-top:7px"><strong>✅ Use this in re-listing conversations</strong>Show buyers SPINS velocity: "We sell well where stocked. Category +15.3%. Every TDP point recovered at $36K velocity adds meaningful revenue."</div>
+    </div>
+  </div>
+  <div class="data-src">Source: SPINS POS Natural Expanded Channel, 52W ending 05/17/2026. TDP = Dollars ÷ Dollars/TDP.</div>
+</div>
+
+<!-- S2: VITAMIN SHOPPE DEEP DIVE (NEW) -->
+<div class="slide" id="s2">
+  <div class="shdr"><div class="badge bg2">NEW · VITAMIN SHOPPE DEEP DIVE</div><h2>Why Vitamin Shoppe Declined −14.5% <span class="src-tag st-s">SPINS Key Account</span></h2><p>VS is Reserveage's largest account at $1.45M POS. The decline has four distinct drivers: SKU-level TDP loss, gummies supply chain delisting, reduced promo activity, and new competitor shelf space.</p></div>
+  <div class="g2 mb">
+    <div class="card"><h3>VS SKU Performance — $$ Lost by SKU <span class="src-tag st-s">SPINS VS Key Acct</span></h3><div class="ch-lg"><canvas id="c-vs-skus"></canvas></div>
+      <div class="ins warn"><strong>⚠ Top 4 SKU declines drove −$371K at VS</strong>250mg 120ct: −$137K. 500mg 60ct: −$98K. 250mg 60ct: −$88K. 250mg 30ct: −$50K. Contrast: RSV Plus, 100mg, and Bergamot all grew.</div></div>
+    <div class="card"><h3>VS: TDP Loss by SKU <span class="src-tag st-s">SPINS Key Acct</span></h3><div class="ch-lg"><canvas id="c-vs-tdp"></canvas></div>
+      <div class="ins pur"><strong>📌 250mg 60ct lost the most TDP (−31.5 pts)</strong>From 64.5 TDP to 44.2 — that's ~20 fewer stores carrying this SKU at VS. The 500mg 60ct lost 18+ TDP points. Gummies: nearly fully delisted (49 → 0.04 TDP).</div></div>
+  </div>
+  <div class="g3 mb">
+    <div class="card">
+      <h3>VS Retail vs Web Split</h3>
+      <div style="margin-top:4px">
+        <div style="text-align:center;padding:10px;background:rgba(239,68,68,.07);border-radius:6px;margin-bottom:7px">
+          <div style="font-size:9px;color:var(--muted);margin-bottom:2px">VS RETAIL <span class="src-tag st-s">SPINS</span></div>
+          <div style="font-size:24px;font-weight:800;color:var(--warn)">$1.10M</div>
+          <div style="font-size:9px;color:var(--warn)">was $1.36M YA (−19.0%)</div>
+        </div>
+        <div style="text-align:center;padding:10px;background:rgba(34,197,94,.07);border-radius:6px">
+          <div style="font-size:9px;color:var(--muted);margin-bottom:2px">VS WEB / eCommerce <span class="src-tag st-s">SPINS</span></div>
+          <div style="font-size:24px;font-weight:800;color:var(--cat)">$353K</div>
+          <div style="font-size:9px;color:var(--cat)">was $341K YA (+3.5%) ↑</div>
+        </div>
+        <div class="ins ok" style="margin-top:7px"><strong>✅ TTVS.com is growing (+3.5%)</strong>The store channel is struggling but Vitaminshoppe.com is gaining. Digital engagement with the brand is healthy — physical planogram is the problem.</div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>VS: 3-Year Trajectory</h3>
+      <div style="margin-top:4px">
+        <div class="br"><div class="lbl" style="color:var(--cat)">VS Total (2YA)</div><div class="track"><div class="fill" style="width:100%;background:var(--cat)"></div></div><div class="val green">$1.97M</div></div>
+        <div class="br"><div class="lbl" style="color:var(--gold)">VS Total (YA)</div><div class="track"><div class="fill" style="width:86.3%;background:var(--gold)"></div></div><div class="val gold">$1.70M</div></div>
+        <div class="br"><div class="lbl" style="color:var(--warn)">VS Total (Now)</div><div class="track"><div class="fill" style="width:73.8%;background:var(--warn)"></div></div><div class="val red">$1.45M</div></div>
+        <div style="height:8px"></div>
+        <div class="br"><div class="lbl">Retail (2YA)</div><div class="track"><div class="fill" style="width:100%;background:rgba(239,68,68,.5)"></div></div><div class="val" style="color:var(--muted)">$1.47M</div></div>
+        <div class="br"><div class="lbl">Retail (YA)</div><div class="track"><div class="fill" style="width:92.4%;background:rgba(239,68,68,.4)"></div></div><div class="val" style="color:var(--muted)">$1.36M</div></div>
+        <div class="br"><div class="lbl">Retail (Now)</div><div class="track"><div class="fill" style="width:74.9%;background:var(--warn)"></div></div><div class="val red">$1.10M</div></div>
+        <div class="ins warn" style="margin-top:7px"><strong>⚠ Retail declining every year since 2YA</strong>From $1.47M → $1.36M → $1.10M. This is a sustained multi-year retail shelf erosion.</div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>What Was Delisted at VS <span class="src-tag st-s">SPINS</span></h3>
+      <div style="font-size:10px;display:flex;flex-direction:column;gap:5px;margin-top:3px">
+        <div style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.18);border-radius:6px;padding:8px">
+          <div style="font-weight:700;color:var(--warn);font-size:9.5px">100mg GUMMIES — Supply Chain</div>
+          <div>$57K (2YA) → $12K (YA) → $25 (Now)</div>
+          <div style="color:var(--muted);font-size:9px">TDP: 49 → 49 → 0.04. Was on shelf, sold well. Supply chain issue caused out-of-stock/delisting.</div>
+        </div>
+        <div style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.18);border-radius:6px;padding:8px">
+          <div style="font-weight:700;color:var(--gold);font-size:9.5px">500mg 30ct — Effectively Delisted</div>
+          <div>$15K (2YA) → $2K (YA) → $0 (Now)</div>
+          <div style="color:var(--muted);font-size:9px">TDP 17 → 0. Replaced by larger sizes.</div>
+        </div>
+        <div style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.18);border-radius:6px;padding:8px">
+          <div style="font-weight:700;color:var(--warn);font-size:9.5px">BERRY CHEWS — Fully Gone</div>
+          <div>$27K (2YA) → $10 (YA) → $0 (Now)</div>
+          <div style="color:var(--muted);font-size:9px">Discontinued SKU fully winding down.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="cpanel">
+    <h3>VS SKU Detail — TDP, Velocity & Promo <span class="src-tag st-s">SPINS VS Key Account</span></h3>
+    <div class="stbl"><table class="tbl"><thead><tr><th>SKU</th><th>$ Now</th><th>$ YA</th><th>$ Δ</th><th>TDP Now</th><th>TDP YA</th><th>TDP Δ</th><th>Vel. Δ</th><th>Promo%</th><th>Promo% YA</th><th>Lift%</th></tr></thead>
+    <tbody>
+      <tr><td>500mg 60ct</td><td>$272K</td><td>$369K</td><td class="red">−26.4%</td><td>35.6</td><td>53.7</td><td class="red">−33.8%</td><td class="green">+11.1%</td><td>55.9%</td><td>49.3%</td><td>124.9</td></tr>
+      <tr><td>250mg 120ct</td><td>$229K</td><td>$366K</td><td class="red">−37.4%</td><td>39.1</td><td>51.0</td><td class="red">−23.4%</td><td class="red">−18.2%</td><td>40.6%</td><td>51.4%</td><td>41.7</td></tr>
+      <tr><td>RSV+Pterostilb.</td><td>$181K</td><td>$225K</td><td class="red">−19.6%</td><td>34.8</td><td>42.4</td><td class="red">−18.1%</td><td class="red">−1.8%</td><td>42.9%</td><td>49.6%</td><td>29.6</td></tr>
+      <tr><td>250mg 60ct</td><td>$143K</td><td>$231K</td><td class="red">−38.1%</td><td>44.2</td><td>64.5</td><td class="red">−31.5%</td><td class="red">−9.7%</td><td>38.7%</td><td>41.8%</td><td>24.6</td></tr>
+      <tr><td>NAD+Resv Plus</td><td>$141K</td><td>—</td><td class="green">NEW</td><td>42.8</td><td>—</td><td class="green">NEW</td><td>—</td><td>27.4%</td><td>—</td><td>30.6</td></tr>
+      <tr><td>RSV Plus 1000mg</td><td>$134K</td><td>$124K</td><td class="green">+8.1%</td><td>42.0</td><td>48.7</td><td class="red">−13.8%</td><td class="green">+25.3%</td><td>32.0%</td><td>25.8%</td><td>29.2</td></tr>
+      <tr><td>Bergamot Chol.</td><td>$115K</td><td>$103K</td><td class="green">+11.1%</td><td>39.0</td><td>38.5</td><td class="green">+1.1%</td><td class="green">+9.9%</td><td>36.2%</td><td>43.9%</td><td>25.1</td></tr>
+      <tr><td>RSV Plus 500mg</td><td>$105K</td><td>$93K</td><td class="green">+13.6%</td><td>44.8</td><td>52.1</td><td class="red">−13.9%</td><td class="green">+32.0%</td><td>36.8%</td><td>28.6%</td><td>38.3</td></tr>
+      <tr><td>250mg 30ct</td><td>$74K</td><td>$124K</td><td class="red">−40.1%</td><td>46.6</td><td>61.3</td><td class="red">−23.9%</td><td class="red">−21.3%</td><td>34.6%</td><td>40.1%</td><td>25.6</td></tr>
+      <tr><td>100mg 60ct</td><td>$59K</td><td>$48K</td><td class="green">+21.7%</td><td>40.0</td><td>49.2</td><td class="red">−18.7%</td><td class="green">+49.8%</td><td>35.7%</td><td>33.5%</td><td>28.6</td></tr>
+      <tr><td>100mg Gummies</td><td>$25</td><td>$12K</td><td class="red">−99.8%</td><td>0.04</td><td>49.1</td><td class="red">−99.9%</td><td>—</td><td>0.0%</td><td>82.6%</td><td>—</td></tr>
+    </tbody></table></div>
+    <div class="data-src">Source: SPINS POS TVS Key Account (Vitamins &amp; Supplements channel), 52W ending 05/17/2026. TDP = store distribution presence.</div>
+  </div>
+</div>
+
+<!-- S3: COMPETITORS -->
+<div class="slide" id="s3">
+  <div class="shdr"><div class="badge bp">COMPETITIVE LANDSCAPE</div><h2>Who Is Winning the Resveratrol Category? <span class="src-tag st-s">SPINS POS</span></h2><p>New entrants captured all category growth. Rho Nutrition #1 in Natural Channel. At Vitamin Shoppe: Rho, Force Factor, and Codeage all entered without prior history.</p></div>
+  <div class="g2 mb">
+    <div class="card"><h3>Natural Channel — Brand Rankings 52W <span class="src-tag st-s">SPINS</span></h3><div class="ch-lg"><canvas id="c-comp-bar"></canvas></div></div>
+    <div class="card"><h3>YoY Growth — Natural Channel <span class="src-tag st-s">SPINS</span></h3><div class="ch-lg"><canvas id="c-comp-growth"></canvas></div></div>
+  </div>
+  <div class="g3">
+    <div class="card"><h3>New Entrant Disruptors</h3>
+      <div style="display:flex;flex-direction:column;gap:6px;margin-top:3px">
+        <div style="background:rgba(34,197,94,.07);border:1px solid rgba(34,197,94,.15);border-radius:6px;padding:8px"><div style="font-size:8.5px;font-weight:700;color:var(--cat)">RHO NUTRITION — #1 NATURAL CHANNEL</div><div style="font-size:17px;font-weight:800;color:var(--cat)">$864K · 20.6 TDP</div><div style="font-size:9px;color:var(--muted)">Zero last year. Promo: 46.5% — aggressive promotional build. At VS: $320K from zero.</div></div>
+        <div style="background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.15);border-radius:6px;padding:8px"><div style="font-size:8.5px;font-weight:700;color:var(--gold)">FORCE FACTOR — VS NEW ENTRANT</div><div style="font-size:17px;font-weight:800;color:var(--gold)">$247K at VS</div><div style="font-size:9px;color:var(--muted)">Force Factor NAD+ Longevity: $0 → $75K TVS retail. RSV Soft Chews: $0 → $12K. Rapid TDP build at VS.</div></div>
+        <div style="background:rgba(6,182,212,.07);border:1px solid rgba(6,182,212,.15);border-radius:6px;padding:8px"><div style="font-size:8.5px;font-weight:700;color:var(--comp)">CODEAGE — +46,809% NATURAL</div><div style="font-size:17px;font-weight:800;color:var(--comp)">$145K nat. · $120K VS</div><div style="font-size:9px;color:var(--muted)">Near zero → $145K natural, $120K VS. Promo lift at VS: 91% — very effective promo.</div></div>
+      </div>
+    </div>
+    <div class="card"><h3>Legacy Brands — All Declining</h3>
+      <div style="margin-top:3px">
+        <div class="br"><div class="lbl">Youthery</div><div class="track"><div class="fill" style="width:100%;background:var(--warn)"></div></div><div class="val red">−34.9%</div></div>
+        <div class="br"><div class="lbl">NOW Foods</div><div class="track"><div class="fill" style="width:76%;background:var(--warn)"></div></div><div class="val red">−24.0%</div></div>
+        <div class="br"><div class="lbl">Country Life</div><div class="track"><div class="fill" style="width:64%;background:var(--warn)"></div></div><div class="val red">−19.0%</div></div>
+        <div class="br"><div class="lbl">Natural Factors</div><div class="track"><div class="fill" style="width:55%;background:var(--warn)"></div></div><div class="val red">−15.8%</div></div>
+        <div class="br"><div class="lbl" style="color:var(--rsv)">Reserveage</div><div class="track"><div class="fill" style="width:19%;background:var(--rsv)"></div></div><div class="val purple">−4.7%</div></div>
+        <div class="ins ok" style="margin-top:7px"><strong>✅ Reserveage best among legacy brands</strong>All established competitors declining more steeply. The challenge is new entrants, not legacy competition.</div>
+      </div>
+    </div>
+    <div class="card"><h3>VS Competitive Landscape <span class="src-tag st-s">SPINS VS Key Acct</span></h3>
+      <div style="font-size:10px;margin-top:3px">
+        <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border)"><span>Life Extension</span><span><strong>$2.54M</strong> <span class="pill pm">−</span></span></div>
+        <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border)"><span style="color:var(--rsv);font-weight:700">Reserveage</span><span><strong style="color:var(--rsv)">$1.45M</strong> <span class="pill pr">−14.5%</span></span></div>
+        <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border)"><span>Nutrex Hawaii</span><span><strong>$456K</strong> <span class="pill pg">↑ Grow</span></span></div>
+        <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border)"><span>Rho Nutrition</span><span><strong style="color:var(--cat)">$320K</strong> <span class="pill pg">NEW</span></span></div>
+        <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border)"><span>Force Factor</span><span><strong>$247K</strong> <span class="pill pg">NEW</span></span></div>
+        <div style="display:flex;justify-content:space-between;padding:4px 0"><span>Codeage</span><span><strong>$130K</strong> <span class="pill pg">NEW</span></span></div>
+      </div>
+      <div class="ins warn" style="margin-top:7px"><strong>⚠ At least $697K in NEW brand revenue entered VS that didn't exist YA</strong>Rho + Force Factor + Codeage grew from near-zero. This is shelf space that came at the expense of established brands including Reserveage.</div>
+    </div>
+  </div>
+  <div class="data-src">Source: SPINS POS Natural Expanded Channel + TVS Key Account (Vitamins &amp; Supplements), 52W ending 05/17/2026.</div>
+</div>
+
+<!-- S4: PROMO ANALYSIS (NEW) -->
+<div class="slide" id="s4">
+  <div class="shdr"><div class="badge bg2">NEW · PROMO ANALYSIS</div><h2>Promotional Effectiveness — Did Promo Drive Market Share? <span class="src-tag st-s">SPINS POS</span></h2><p>Reserveage's promo rate is falling while lift index is among the highest. Competitors using promo more aggressively to build distribution and trial.</p></div>
+  <div class="g2 mb">
+    <div class="card"><h3>Promo Rate vs Promo Lift — Natural Channel 52W <span class="src-tag st-s">SPINS</span></h3><div class="ch-lg"><canvas id="c-promo-scatter"></canvas></div>
+      <div class="ins pur"><strong>📌 High lift, lower promo rate = underutilized promotional power</strong>Reserveage's lift index of 15.5 on 23% promo rate is strong — meaning when promoted, it moves product effectively. Rho runs 46.5% promo and lower lift, suggesting aggressive trial-building. Reserveage could use promo more strategically.</div></div>
+    <div class="card"><h3>Reserveage Promo Trend at Vitamin Shoppe — All Windows <span class="src-tag st-s">SPINS VS</span></h3><div class="ch-lg"><canvas id="c-promo-trend"></canvas></div>
+      <div class="ins warn"><strong>⚠ Promo rate declining sharply at VS</strong>YTD: 41.6% vs 52.7% YA. 4W: 47.8% vs 73.5% YA. But promo lift remains strong (26.9% YTD). This means promotional support was reduced without compensating TDP investment — accelerating the decline.</div></div>
+  </div>
+  <div class="g3">
+    <div class="card"><h3>Competitor Promo Rates — Natural Channel <span class="src-tag st-s">SPINS 52W</span></h3>
+      <div style="margin-top:4px">
+        <div class="br"><div class="lbl" style="color:var(--warn)">Rho Nutrition</div><div class="track"><div class="fill" style="width:100%;background:var(--warn)"></div></div><div class="val red">46.5%</div></div>
+        <div class="br"><div class="lbl" style="color:var(--gold)">MRM/Metabolic</div><div class="track"><div class="fill" style="width:86%;background:var(--gold)"></div></div><div class="val gold">40.1%</div></div>
+        <div class="br"><div class="lbl">Youthery</div><div class="track"><div class="fill" style="width:92%;background:#475569"></div></div><div class="val" style="color:var(--muted)">42.6%</div></div>
+        <div class="br"><div class="lbl">Natural Factors</div><div class="track"><div class="fill" style="width:70%;background:#475569"></div></div><div class="val" style="color:var(--muted)">32.3%</div></div>
+        <div class="br"><div class="lbl" style="color:var(--rsv)">Reserveage</div><div class="track"><div class="fill" style="width:50%;background:var(--rsv)"></div></div><div class="val purple">23.0%</div></div>
+        <div class="br"><div class="lbl">Codeage</div><div class="track"><div class="fill" style="width:40%;background:#475569"></div></div><div class="val" style="color:var(--muted)">18.7%</div></div>
+        <div class="ins info" style="margin-top:7px"><strong>📌 Rho using promo to build trial and TDP</strong>New brands use high promo rates to generate trial and retailer confidence. Rho at 46.5% is a classic new-brand market entry strategy. Once established, promo rates typically normalize.</div>
+      </div>
+    </div>
+    <div class="card"><h3>Promo Lift Comparison <span class="src-tag st-s">SPINS 52W</span></h3>
+      <div style="margin-top:4px;font-size:10px">
+        <div style="font-size:9px;color:var(--muted);margin-bottom:6px">Lift = incremental sales driven by promotion. Higher = promo works better for that brand.</div>
+        <div class="br"><div class="lbl">Baush &amp; Lomb</div><div class="track"><div class="fill" style="width:100%;background:var(--cat)"></div></div><div class="val green">21.6</div></div>
+        <div class="br"><div class="lbl" style="color:var(--rsv)">Reserveage</div><div class="track"><div class="fill" style="width:71%;background:var(--rsv)"></div></div><div class="val purple">15.5</div></div>
+        <div class="br"><div class="lbl">Natural Factors</div><div class="track"><div class="fill" style="width:84%;background:#475569"></div></div><div class="val" style="color:var(--muted)">18.1</div></div>
+        <div class="br"><div class="lbl">Garden of Life</div><div class="track"><div class="fill" style="width:73%;background:#475569"></div></div><div class="val" style="color:var(--muted)">15.7</div></div>
+        <div class="br"><div class="lbl">Rho Nutrition</div><div class="track"><div class="fill" style="width:82%;background:#475569"></div></div><div class="val" style="color:var(--muted)">39.1</div></div>
+        <div class="br"><div class="lbl">MRM/Metabolic</div><div class="track"><div class="fill" style="width:66%;background:#475569"></div></div><div class="val" style="color:var(--muted)">31.4</div></div>
+        <div class="ins ok" style="margin-top:7px"><strong>✅ Reserveage lift is solid at 15.5</strong>Promo works for this brand. Reducing it at VS without compensating TDP support directly contributed to the decline.</div>
+      </div>
+    </div>
+    <div class="card"><h3>Promo Strategy at VS — Key Finding <span class="src-tag st-s">SPINS VS</span></h3>
+      <div style="margin-top:4px;font-size:10px">
+        <div style="padding:8px;background:rgba(239,68,68,.07);border-radius:6px;border:1px solid rgba(239,68,68,.16);margin-bottom:6px">
+          <div style="font-weight:700;color:var(--warn);font-size:9.5px;margin-bottom:2px">500mg 60ct at VS — PROMO PARADOX</div>
+          <div>Promo rate rose 49.3% → 55.9% but promo lift jumped to 124.9 (from 41.3 YA)</div>
+          <div style="color:var(--muted);font-size:9px;margin-top:2px">The SKU now depends heavily on promo to drive any sales. Promo lift of 125 means 2.25× baseline sales when on deal. Without promo, nearly no movement. This is a sign of weak base velocity and over-reliance on deals to drive trial.</div>
+        </div>
+        <div style="padding:8px;background:rgba(34,197,94,.07);border-radius:6px;border:1px solid rgba(34,197,94,.16)">
+          <div style="font-weight:700;color:var(--cat);font-size:9.5px;margin-bottom:2px">RSV Plus 500mg at VS — HEALTHY PROMO</div>
+          <div>Promo rate: 28.6% → 36.8%. Promo lift: 38.3 (from 18.3)</div>
+          <div style="color:var(--muted);font-size:9px;margin-top:2px">Growing SKU with increasing promo engagement and rising lift. This is what good promo-assisted growth looks like.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="data-src">Source: SPINS POS Natural Expanded Channel + TVS Key Account, 52W and recent windows ending 05/17/2026.</div>
+</div>
+
+<!-- S5: COLLAGEN MYTH -->
+<div class="slide" id="s5">
+  <div class="shdr"><div class="badge bp">DATA EVIDENCE</div><h2>Collagen Myth — Complete Analysis <span class="src-tag st-b">NetSuite + SPINS Conditioning</span></h2>
+  <p>Three separate collagen events: (1) Powder discontinued due to regulations/slow sales. (2) Chews out-of-stock due to supply chain. (3) Neither caused resveratrol decline — resveratrol grew for years after each event.</p></div>
+  <div class="notice ng mb"><strong>📌 Collagen context clarified:</strong> The "KOR" powder was a Korean-market version discontinued due to regulatory issues. The domestic powder (SKUs 5427/5428/6001) was re-launched but had slow sales and was subsequently discontinued. The Collagen Replenish Chews experienced supply chain out-of-stock issues — a completely separate, operational event, not a strategic discontinuation.</div>
+  <div class="g2 mb">
+    <div class="card"><h3>Resveratrol vs Collagen — NetSuite Wholesale Trend <span class="src-tag st-n">NetSuite</span></h3><div class="ch-lg"><canvas id="c-halo"></canvas></div>
+      <div class="ins ok"><strong>✅ Opposite trajectories for 3+ years</strong>Collagen fell every year while resveratrol grew every year 2020–2023. A halo effect requires synchronized movement. The data shows the opposite.</div></div>
+    <div>
+      <div style="background:rgba(34,197,94,.05);border:1px solid rgba(34,197,94,.16);border-radius:7px;padding:11px;margin-bottom:9px">
+        <div style="font-size:12px;font-weight:800;color:var(--cat);margin-bottom:5px">✅ Powder Halo Analysis — Four Tests</div>
+        <ul class="pfl">
+          <li><span class="chk">✓</span><div><strong>Powder customers' resveratrol kept growing after powder discontinued.</strong> <span class="src-tag st-n">NetSuite</span>: 234 accounts that bought the domestic powder saw resveratrol grow from $1.63M (2020) → $2.33M (2022) → $2.82M (2023) — year after year of growth despite powder being wound down.</div></li>
+          <li><span class="chk">✓</span><div><strong>4-year timing gap (powder → resveratrol decline).</strong> Domestic powder wound down in 2022. Resveratrol didn't decline until 2024. A 2-year lag destroys the halo hypothesis.</div></li>
+          <li><span class="chk">✓</span><div><strong>Collagen chews supply chain issue = operational, not strategic.</strong> The chews going out of stock at VS ($57K → $25) was a supply chain problem, not a discontinuation. It removed $57K from VS but had no effect on resveratrol sales (resveratrol grew through the chews' peak period).</div></li>
+          <li><span class="chk">✓</span><div><strong>SPINS Conditioning: collagen powder category is actually growing +264% industry-wide.</strong> If Reserveage's powder had stayed on shelf, the format was viable. The exit was brand-specific (regulatory/demand), not a format failure.</div></li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Collagen Format Trends — Category-Wide <span class="src-tag st-s">SPINS Conditioning</span></h3>
+        <div class="br"><div class="lbl" style="color:var(--cat)">Powder (category)</div><div class="track"><div class="fill" style="width:100%;background:var(--cat)"></div></div><div class="val green">+264%</div></div>
+        <div class="br"><div class="lbl" style="color:var(--cat)">Caps/Tablets (cat.)</div><div class="track"><div class="fill" style="width:85%;background:var(--cat)"></div></div><div class="val green">+210%</div></div>
+        <div class="br"><div class="lbl" style="color:var(--warn)">Chews/Gummies</div><div class="track"><div class="fill" style="width:100%;background:var(--warn)"></div></div><div class="val red">−34.0%</div></div>
+        <div class="ins ok" style="margin-top:7px"><strong>✅ Chews declining category-wide — supply chain aside, the format is struggling anyway</strong>The RSV Chew supply chain issue happened in a declining format. Both the category (−34%) and the SKU (−96%) were heading down regardless.</div>
+      </div>
+    </div>
+  </div>
+  <div class="cpanel">
+    <h3>Year-by-Year Evidence <span class="src-tag st-n">NetSuite Wholesale</span></h3>
+    <table class="tbl"><thead><tr><th>Year</th><th>Resveratrol</th><th>Collagen</th><th>Resv. YoY</th><th>Coll. YoY</th><th>Powder Customers' Resv.</th><th style="text-align:left">Key Event</th></tr></thead>
+    <tbody>
+      <tr><td>2020</td><td>$4.20M</td><td>$4.70M</td><td>—</td><td>—</td><td>$1.63M</td><td style="text-align:left;color:var(--muted);font-size:9px">KOR powder + domestic powder both active</td></tr>
+      <tr><td>2021</td><td>$4.37M</td><td>$4.33M</td><td class="green">+4.2%</td><td class="red">−7.9%</td><td class="green">$2.08M</td><td style="text-align:left;color:var(--cat);font-size:9px">↑ Resv. grows. Powder customers' resv. +27.7%</td></tr>
+      <tr><td>2022</td><td>$4.57M</td><td>$3.01M</td><td class="green">+4.4%</td><td class="red">−30.4%</td><td class="green">$2.33M</td><td style="text-align:left;color:var(--cat);font-size:9px">↑ Resv. grows. Domestic powder winds down (regulatory). Resv. +11.6% for powder accts.</td></tr>
+      <tr><td>2023</td><td>$4.69M</td><td>$2.21M</td><td class="green">+2.6%</td><td class="red">−26.6%</td><td class="green">$2.82M</td><td style="text-align:left;color:var(--cat);font-size:9px">Resv. at PEAK. Powder customers' resv. +21.3% YoY — no halo effect whatsoever.</td></tr>
+      <tr><td>2024</td><td>$4.09M</td><td>$1.70M</td><td class="red">−12.8%</td><td class="red">−23.1%</td><td class="red">$2.44M</td><td style="text-align:left;color:var(--gold);font-size:9px">Resv. falls — WFM/UNFI cut 1000mg. CVS/KeHe/Walgreens margin exits. Chews supply chain.</td></tr>
+      <tr><td>2025</td><td>$4.16M</td><td>$0.89M</td><td class="green">+1.7%</td><td class="red">−47.4%</td><td class="green">$2.63M</td><td style="text-align:left;color:var(--cat);font-size:9px">↑ Resv. recovers. Collagen still falling. Powder customers still buying resveratrol.</td></tr>
+    </tbody></table>
+    <div class="data-src">Source: NetSuite/TCC wholesale. "Powder Customers" = 234 accounts that purchased domestic powder SKUs (5427/5428/6001). SPINS Conditioning used for category format data.</div>
+  </div>
+</div>
+
+<!-- S6: 24W/YTD -->
+<div class="slide" id="s6">
+  <div class="shdr"><div class="badge bg2">RECENT WINDOWS</div><h2>24W &amp; YTD Momentum <span class="src-tag st-s">SPINS POS</span> + <span class="src-tag st-n">NetSuite 2026</span></h2><p>Dollar stabilization (+2.5% 4W) but TDP still declining. VS showing −62.8% monthly avg vs same 2025 period. B2B Jan–Jun comparison uses monthly averages for apples-to-apples.</p></div>
+  <div class="mp-row">
+    <div class="mp"><div class="per">4W SPINS $ YoY</div><div class="pval green">+2.5%</div><div class="psub">TDP: −7.0%</div></div>
+    <div class="mp"><div class="per">12W SPINS $ YoY</div><div class="pval" style="color:var(--muted)">−0.6%</div><div class="psub">TDP: −5.2%</div></div>
+    <div class="mp"><div class="per">24W SPINS $ YoY</div><div class="pval red">−9.3%</div><div class="psub">TDP: −9.0%</div></div>
+    <div class="mp"><div class="per">VS YTD</div><div class="pval red">−23.8%</div><div class="psub">$506K vs $665K YA</div></div>
+    <div class="mp"><div class="per">B2B Jan–Jun Avg/Mo</div><div class="pval red">−46.8%</div><div class="psub">$193K vs $362K YA</div></div>
+  </div>
+  <div class="g2 mb">
+    <div class="card"><h3>$ YoY vs TDP YoY — All Windows <span class="src-tag st-s">SPINS Natural</span></h3><div class="ch"><canvas id="c-momentum"></canvas></div><div class="ins pur"><strong>📌 Dollar recovery is velocity-driven, not distribution recovery</strong>4W: dollars +2.5% but TDP −7.0%. Sustainable growth requires TDP stabilization. Current gains are fragile.</div></div>
+    <div class="card"><h3>Monthly B2B — 2024 vs 2025 vs 2026 <span class="src-tag st-n">NetSuite</span></h3><div class="ch"><canvas id="c-monthly-b2b"></canvas></div><div class="ins warn"><strong>⚠ 2026 running at ~53% of same-period 2025</strong>Jan–Jun avg: $193K/mo in 2026 vs $362K in 2025. Structural account changes flowing through.</div></div>
+  </div>
+  <div class="g2">
+    <div class="card"><h3>Monthly Avg — Jan–Jun 2025 vs 2026 <span class="src-tag st-n">NetSuite</span></h3>
+      <div style="font-size:9.5px;color:var(--muted);margin-bottom:6px">Apples-to-apples: same 6-month window, monthly average to remove partial-year bias</div>
+      <table class="tbl"><thead><tr><th>Account</th><th>2025 avg/mo</th><th>2026 avg/mo</th><th>Δ</th></tr></thead><tbody>
+        <tr><td>Pattern (Amazon)</td><td>$72K</td><td>$59K</td><td><span class="pill pm">−18.9%</span></td></tr>
+        <tr><td>TVS (Vitamin Shoppe)</td><td>$106K</td><td>$39K</td><td><span class="pill pr">−62.8%</span></td></tr>
+        <tr><td>THRESHOLD</td><td>$48K</td><td>$31K</td><td><span class="pill pr">−35.6%</span></td></tr>
+        <tr><td>UNFI</td><td>$36K</td><td>$20K</td><td><span class="pill pr">−43.7%</span></td></tr>
+        <tr><td>iHERB</td><td>$34K</td><td>$13K</td><td><span class="pill pr">−61.2%</span></td></tr>
+        <tr><td>Emerson/Fullscript</td><td>$5K</td><td>$7K</td><td><span class="pill pg">+27.3%</span></td></tr>
+        <tr><td>Pureformulas</td><td>$2K</td><td>$5K</td><td><span class="pill pg">+142%</span></td></tr>
+      </tbody></table>
+      <div class="ins warn" style="margin-top:6px"><strong>⚠ VS at −62.8% monthly rate — most urgent priority</strong>From $106K/mo avg to $39K. The SPINS data shows VS POS also declining — this is a genuine sell-through problem at the account level.</div>
+      <div class="data-src">Jan–Jun 2025 vs Jan–Jun 2026. Same 6-month window, monthly avg.</div>
+    </div>
+    <div class="card"><h3>Category vs Reserveage — Recent SPINS Windows <span class="src-tag st-s">SPINS</span></h3><div class="ch"><canvas id="c-cat-windows"></canvas></div><div class="ins warn"><strong>⚠ Category +37.5% in 4W, Reserveage +2.5%</strong>Brand is improving but capturing a small fraction of category momentum. TDP recovery is the unlock.</div></div>
+  </div>
+</div>
+
+<!-- S7: SKU DIVE -->
+<div class="slide" id="s7">
+  <div class="shdr"><div class="badge bg2">SKU ANALYSIS</div><h2>Resveratrol SKU Performance <span class="src-tag st-s">SPINS POS — All Windows</span></h2><p>Core SKUs losing TDP. Innovation SKUs building distribution. Toggle between time periods to see momentum shifts.</p></div>
+  <div class="tg mb" id="sku-tg"><button class="on" onclick="switchSku('24w')">24 Weeks</button><button onclick="switchSku('ytd')">YTD</button><button onclick="switchSku('12w')">12 Weeks</button><button onclick="switchSku('4w')">4 Weeks (Latest)</button></div>
+  <div class="g2 mb"><div class="card"><h3>SKU $ Revenue</h3><div class="ch-lg"><canvas id="c-sku-mix"></canvas></div></div><div class="card"><h3>SKU YoY $ Change (%)</h3><div class="ch-lg"><canvas id="c-sku-yoy"></canvas></div></div></div>
+  <div class="cpanel">
+    <h3>SKU Detail — <span id="sku-plabel">24 Weeks</span> — Natural Channel <span class="src-tag st-s">SPINS POS</span></h3>
+    <table class="tbl"><thead><tr><th>SKU</th><th>$ Now</th><th>$ YA</th><th>$ YoY</th><th>TDP Δ</th><th>Vel. Δ</th><th>Diagnosis</th></tr></thead><tbody id="sku-tbody"></tbody></table>
+    <div class="data-src">Source: SPINS POS Natural Expanded Channel. TDP = Dollars ÷ Dollars/TDP.</div>
+  </div>
+</div>
+
+<!-- S8: OTHER CATEGORIES -->
+<div class="slide" id="s8">
+  <div class="shdr"><div class="badge bg2">OTHER CATEGORIES</div><h2>Reserveage Beyond Resveratrol <span class="src-tag st-s">SPINS Conditioning 52W</span></h2><p>Conditioning portfolio (collagen, keratin, beauty, legs) shows same distribution-loss pattern. Bergamot and Beautiful Legs validated as brand's cross-category winners.</p></div>
+  <div class="g2 mb">
+    <div class="card"><h3>Conditioning Portfolio — SPINS POS <span class="src-tag st-s">SPINS Conditioning</span></h3><div class="ch-lg"><canvas id="c-coll-skus"></canvas></div>
+      <div class="ins warn"><strong>⚠ Conditioning portfolio down −38.8% overall</strong>$319K now vs $522K YA. Chews (supply chain) and Keratin Biotin biggest declines. Same distribution-loss pattern as resveratrol.</div></div>
+    <div class="card"><h3>Collagen Category Format Trends <span class="src-tag st-s">SPINS Conditioning</span></h3>
+      <div style="margin-top:4px">
+        <div style="margin-bottom:6px;padding:8px;background:rgba(34,197,94,.07);border-radius:6px;border:1px solid rgba(34,197,94,.14)"><div style="font-size:8.5px;font-weight:700;color:var(--cat)">POWDER — GROWING CATEGORY (+264%)</div><div style="font-size:10px">$87K (YA) → $414K (now). Ancient Nutrition, NeoCell leading. Reserveage exited this form. The market validated it was a good format — brand-specific exit, not format failure.</div></div>
+        <div style="margin-bottom:6px;padding:8px;background:rgba(239,68,68,.07);border-radius:6px;border:1px solid rgba(239,68,68,.14)"><div style="font-size:8.5px;font-weight:700;color:var(--warn)">CHEWS/GUMMIES — DECLINING (−34%)</div><div style="font-size:10px">$780K (2YA) → $604K (YA) → $407K (now). RSV Chews supply chain issue happened in a format already declining. Double headwind.</div></div>
+        <div style="padding:8px;background:rgba(34,197,94,.07);border-radius:6px;border:1px solid rgba(34,197,94,.14)"><div style="font-size:8.5px;font-weight:700;color:var(--cat)">CAPS — GROWING (+210%)</div><div style="font-size:10px">Collagen Booster and Replenish capsule SKUs relatively stable. Format is growing industry-wide — Reserveage's cap SKUs benefit from this tailwind.</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="g3">
+    <div class="card"><h3>Bergamot — Validated Cross-File <span class="src-tag st-b">Both SPINS</span></h3>
+      <div style="margin-top:3px">
+        <div style="padding:9px;background:rgba(34,197,94,.07);border:1px solid rgba(34,197,94,.16);border-radius:6px;margin-bottom:6px"><div style="font-size:8.5px;font-weight:700;color:var(--cat)">Resveratrol SPINS file</div><div style="font-size:18px;font-weight:800;color:var(--cat)">+18.8% $ · +6.9% TDP</div><div style="font-size:9px;color:var(--muted)">Only core SKU with both $ and TDP growing. $97K → $115K at VS also growing (+11.1%).</div></div>
+        <div style="padding:9px;background:rgba(34,197,94,.07);border:1px solid rgba(34,197,94,.16);border-radius:6px"><div style="font-size:8.5px;font-weight:700;color:var(--cat)">Conditioning SPINS file</div><div style="font-size:18px;font-weight:800;color:var(--cat)">Beautiful Legs +13.4%</div><div style="font-size:9px;color:var(--muted)">$52K vs $46K YA. Velocity +18%. TDP −3.9% but demand is strong.</div></div>
+        <div class="ins ok" style="margin-top:7px"><strong>✅ Cross-category expansion confirmed working</strong>Bergamot and Legs are Reserveage's cleanest growth stories across both SPINS files.</div>
+      </div>
+    </div>
+    <div class="card"><h3>Both Datasets Aligned on Collagen <span class="src-tag st-b">Both</span></h3>
+      <div style="margin-top:3px">
+        <div class="ins info"><strong>NetSuite wholesale collagen confirms SPINS retail trend</strong>NS: $4.70M (2020) → $0.89M (2025). SPINS Conditioning: $550K (2YA) → $319K (now). Both declining — sell-in and sell-through agree. This is a genuine demand decline, not just a distribution problem.</div>
+        <div class="ins ok" style="margin-top:6px"><strong>✅ Unlike resveratrol, collagen IS a true demand decline</strong>Resveratrol: TDP down, velocity up (demand intact — distribution problem). Collagen: both TDP and velocity declining (demand genuinely weakening). Two completely different dynamics.</div>
+      </div>
+    </div>
+    <div class="card"><h3>Collagen Chews — Supply Chain Clarification <span class="src-tag st-b">Both</span></h3>
+      <div style="margin-top:3px">
+        <div style="padding:8px;background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.16);border-radius:6px;margin-bottom:6px">
+          <div style="font-size:8.5px;font-weight:700;color:var(--gold)">CHEWS: OUT OF STOCK — SUPPLY CHAIN</div>
+          <div style="font-size:10px;margin-top:2px">Not a strategic discontinuation. Supply chain disruption caused extended out-of-stock. SPINS shows TDP collapsed from 5.9 → 1.3 (vs 96% velocity crash) — consistent with extended OOS, not delisting.</div>
+        </div>
+        <div style="padding:8px;background:rgba(6,182,212,.07);border:1px solid rgba(6,182,212,.16);border-radius:6px">
+          <div style="font-size:8.5px;font-weight:700;color:var(--comp)">VS GUMMIES: ALSO SUPPLY CHAIN</div>
+          <div style="font-size:10px;margin-top:2px">100mg Gummies at VS: $57K (2YA) → $12K (YA) → $25 (now). TDP: 49 → 49 → 0.04. Was selling ($82.6% promo driven), then supply chain issue wiped it out. The supply chain problems affected multiple SKUs simultaneously.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="data-src">Sources: SPINS POS Conditioning 52W + SPINS POS Resveratrol 52W, both ending 05/17/2026. NetSuite/TCC wholesale 2020–2026.</div>
+</div>
+
+<!-- S9: WHAT WORKED -->
+<div class="slide" id="s9">
+  <div class="shdr"><div class="badge bp">STRATEGY</div><h2>What Worked, What Didn't &amp; Path Forward <span class="src-tag st-b">Both Sources</span></h2><p>Velocity is intact. Premium ARP holding. TTVS.com growing. The priority: fix TVS retail distribution, recover promo investment, rebuild TDP, expand digital.</p></div>
+  <div class="g2 mb">
+    <div class="card"><h3 style="color:var(--cat)">✅ What Worked</h3>
+      <div class="ins ok"><strong>TTVS.com growing +3.5% <span class="src-tag st-s">SPINS</span></strong>While TVS retail declining −19%, the web channel is growing. Digital engagement with Reserveage is healthy. Online buyers respond to the brand's quality story.</div>
+      <div class="ins ok" style="margin-top:5px"><strong>Innovation SKUs building TDP <span class="src-tag st-s">SPINS</span></strong>NAD+Resveratrol: $141K new at VS. RSV Plus 1000mg: TDP +386%. RSV Plus 500mg at VS: +13.6%. New premium tier working.</div>
+      <div class="ins ok" style="margin-top:5px"><strong>iHERB: $247K → $417K (+69%, 2023–2025) <span class="src-tag st-n">NS</span></strong>Digital-native, no TDP constraints. International reach amplifies volume.</div>
+      <div class="ins ok" style="margin-top:5px"><strong>Bergamot +18.8% $ · Beautiful Legs +13.4% <span class="src-tag st-s">SPINS</span></strong>Both growing in TDP and velocity. Cross-category expansion validated in both SPINS files and at VS specifically (+$11.5K at VS alone).</div>
+      <div class="ins ok" style="margin-top:5px"><strong>Promo lift of 15.5 (nat. ch.) / 36.5% (VS) <span class="src-tag st-s">SPINS</span></strong>When promoted, Reserveage sells well. RSV Plus 500mg promo lift at VS: 38.3. Promo investment in the right SKUs has demonstrated ROI.</div>
+    </div>
+    <div class="card"><h3 style="color:var(--warn)">❌ What Didn't Work / Active Risks</h3>
+      <div class="ins warn"><strong>TVS retail TDP collapse <span class="src-tag st-s">SPINS</span></strong>500mg 60ct: TDP −33.8% at VS. 250mg 60ct: −31.5%. Multi-year sustained erosion from $1.97M (2YA) to $1.45M (now). Retail is driving the account-level decline.</div>
+      <div class="ins warn" style="margin-top:5px"><strong>Promo pullback at VS accelerated decline <span class="src-tag st-s">SPINS</span></strong>Promo rate fell from 52.8% → 43.5% (24W). But lift remained strong. Reducing promo without compensating TDP support removed the primary demand driver for core SKUs.</div>
+      <div class="ins warn" style="margin-top:5px"><strong>Gummies supply chain wiped $57K at VS <span class="src-tag st-s">SPINS</span></strong>100mg Gummies: $57K (2YA) → $25 (now). Supply chain OOS caused likely delisting. Resolving supply chain and re-introducing gummies is a recoverable $50K+ opportunity.</div>
+      <div class="ins warn" style="margin-top:5px"><strong>Rho + Force Factor + Codeage entered VS <span class="src-tag st-s">SPINS</span></strong>$697K+ in new revenue from three brands that didn't exist at VS a year ago. They took shelf space Reserveage ceded through TDP decline.</div>
+    </div>
+  </div>
+  <div class="g4">
+    <div style="background:rgba(239,68,68,.05);border:1px solid rgba(239,68,68,.17);border-radius:7px;padding:10px"><div style="font-size:14px;margin-bottom:3px">🛡️</div><div style="font-size:10.5px;font-weight:800;color:var(--warn);margin-bottom:3px">P1: Restore VS Retail TDP</div><div style="font-size:9px;color:var(--muted)">Use SPINS velocity data to re-list core SKUs. Show VS: 500mg 60ct velocity up +11% where stocked. Gummies re-introduction: $50K+ recoverable. Promo plan needed to defend current shelf.</div></div>
+    <div style="background:rgba(6,182,212,.05);border:1px solid rgba(6,182,212,.17);border-radius:7px;padding:10px"><div style="font-size:14px;margin-bottom:3px">📢</div><div style="font-size:10.5px;font-weight:800;color:var(--comp);margin-bottom:3px">P2: Reinvest Promo at VS</div><div style="font-size:9px;color:var(--muted)">Promo lift of 36.5% at VS means promotional dollars return strong ROI. Restore promo rate closer to 50% for core SKUs. Focus on 500mg 60ct (lift 124.9 — extremely promo-responsive).</div></div>
+    <div style="background:rgba(34,197,94,.05);border:1px solid rgba(34,197,94,.17);border-radius:7px;padding:10px"><div style="font-size:14px;margin-bottom:3px">🎯</div><div style="font-size:10.5px;font-weight:800;color:var(--cat);margin-bottom:3px">P3: Double Digital</div><div style="font-size:9px;color:var(--muted)">iHERB + Amazon: growing, no planogram constraints. TTVS.com: already growing +3.5%. Target $600K+ combined from digital channels aligned with premium organic positioning.</div></div>
+    <div style="background:rgba(245,158,11,.05);border:1px solid rgba(245,158,11,.17);border-radius:7px;padding:10px"><div style="font-size:14px;margin-bottom:3px">💊</div><div style="font-size:10.5px;font-weight:800;color:var(--gold);margin-bottom:3px">P4: Lead with Innovation</div><div style="font-size:9px;color:var(--muted)">NAD+Resveratrol ($141K new at VS). RSV Plus 1000mg TDP +386%. Lead with stacked formulas vs Rho/Codeage price competition. Bergamot + Legs as cross-category anchors.</div></div>
+  </div>
+</div>
+
+<script>
+const slides=document.querySelectorAll('.slide'),nbs=document.querySelectorAll('.nb');
+function show(n){slides.forEach((s,i)=>s.classList.toggle('active',i===n));nbs.forEach((b,i)=>b.classList.toggle('active',i===n));const I=[null,i1,i2,i3,i4,i5,i6,i7,i8,null];if(I[n]&&!window['_i'+n]){I[n]();window['_i'+n]=true;}}
+
+Chart.defaults.color='#94a3b8';Chart.defaults.borderColor='#334155';
+function mk(id,type,data,opts={}){const c=document.getElementById(id);if(!c)return null;return new Chart(c,{type,data,options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{boxWidth:8,font:{size:9}}}}, ...opts}});}
+
+// S1: Distribution
+function i1(){
+  const skus=['500mg 60ct','100mg 60ct','250mg 60ct','250mg 30ct','500mg 30ct','Gummies','Bergamot','RSV+Pter.'];
+  const tdp=[-31.7,-30.4,-9.1,-8.9,-13.0,-20.5,6.9,-3.0],vel=[21.9,37.3,1.4,0.1,-5.0,-9.4,11.1,15.3];
+  mk('c-tdp-decomp','bar',{labels:skus,datasets:[{label:'TDP Δ% (Distribution)',data:tdp,backgroundColor:tdp.map(v=>v>=0?'rgba(34,197,94,.7)':'rgba(239,68,68,.7)'),borderRadius:3},{label:'Velocity $/TDP Δ%',data:vel,backgroundColor:vel.map(v=>v>=0?'rgba(6,182,212,.7)':'rgba(245,158,11,.7)'),borderRadius:3}]},{indexAxis:'y',scales:{x:{grid:{color:'#1e293b'},ticks:{callback:v=>v+'%'}},y:{grid:{display:false},ticks:{font:{size:9}}}},plugins:{legend:{position:'top'}}});
+  mk('c-tdp-periods','bar',{labels:['4W (Latest)','12W','24W','52W'],datasets:[{label:'TDP Δ%',data:[-7.0,-5.2,-9.0,-3.1],backgroundColor:'rgba(239,68,68,.6)',borderRadius:4,borderSkipped:false},{label:'$ Δ%',data:[2.5,-0.6,-9.3,-4.7],backgroundColor:'rgba(124,58,237,.6)',borderRadius:4,borderSkipped:false}]},{scales:{y:{grid:{color:'#1e293b'},ticks:{callback:v=>v+'%'}},x:{grid:{display:false}}},plugins:{legend:{position:'top'}}});
+  mk('c-comp-tdp','bar',{labels:['Reserveage','MRM','Country Life','Rho Nutrition','Nat Factors','Nutri','Codeage'],datasets:[{label:'TDP Now',data:[35.0,27.6,23.7,20.6,19.4,10.3,7.5],backgroundColor:['#7c3aed','#475569','#475569','#22c55e','#475569','#06b6d4','#f59e0b'],borderRadius:3},{label:'TDP YA',data:[36.1,28.7,26.2,0,20.0,0.4,0.02],backgroundColor:'rgba(255,255,255,.09)',borderRadius:3}]},{indexAxis:'y',scales:{x:{grid:{color:'#1e293b'}},y:{grid:{display:false},ticks:{font:{size:9}}}},plugins:{legend:{position:'top'}}});
+}
+
+// S2: VS Deep Dive
+function i2(){
+  mk('c-vs-skus','bar',{
+    labels:['500mg 60ct','250mg 120ct','RSV+Pter.','250mg 60ct','NAD+Resv*','RSV+1000mg','Bergamot','RSV+500mg','250mg 30ct','100mg 60ct'],
+    datasets:[{label:'Now $',data:[272,229,181,143,141,134,115,105,74,59].map(v=>v*1000),backgroundColor:['#ef4444','#ef4444','#ef4444','#ef4444','#22c55e','#22c55e','#22c55e','#22c55e','#ef4444','#22c55e'],borderRadius:2},{label:'YA $',data:[369,366,225,231,0,124,103,93,124,48].map(v=>v*1000),backgroundColor:'rgba(255,255,255,.09)',borderRadius:2}]
+  },{indexAxis:'y',scales:{x:{grid:{color:'#1e293b'},ticks:{callback:v=>'$'+Math.round(v/1000)+'K'}},y:{grid:{display:false},ticks:{font:{size:9}}}},plugins:{legend:{position:'top'}}});
+  mk('c-vs-tdp','bar',{
+    labels:['500mg 60ct','250mg 60ct','250mg 120ct','250mg 30ct','RSV+Pter.','RSV+1000mg','Bergamot','100mg 60ct','RSV+500mg'],
+    datasets:[{label:'TDP Change %',data:[-33.8,-31.5,-23.4,-23.9,-18.1,-13.8,1.1,-18.7,-13.9],backgroundColor:[-33.8,-31.5,-23.4,-23.9,-18.1,-13.8,1.1,-18.7,-13.9].map(v=>v>=0?'rgba(34,197,94,.7)':'rgba(239,68,68,.7)'),borderRadius:3}]
+  },{indexAxis:'y',scales:{x:{grid:{color:'#1e293b'},ticks:{callback:v=>v+'%'}},y:{grid:{display:false},ticks:{font:{size:9}}}},plugins:{legend:{display:false}}});
+}
+
+// S3: Competitors
+function i3(){
+  mk('c-comp-bar','bar',{labels:['Rho Nutrition','Reserveage','Country Life','MRM','Nat Factors','Garden Life','Zhou','Codeage','NOW','Nutri'],datasets:[{label:'Current $',data:[864479,759245,455184,379220,341932,182458,181408,144827,140773,121646],backgroundColor:['#22c55e','#7c3aed','#475569','#475569','#475569','#475569','#475569','#f59e0b','#475569','#06b6d4'],borderRadius:2},{label:'Year Ago $',data:[0,796645,562211,400130,405978,196328,221816,309,185117,9691],backgroundColor:'rgba(255,255,255,.08)',borderRadius:2}]},{indexAxis:'y',scales:{x:{grid:{color:'#1e293b'},ticks:{callback:v=>'$'+Math.round(v/1000)+'K'}},y:{grid:{display:false},ticks:{font:{size:9}}}},plugins:{legend:{position:'top'}}});
+  const gv=[46809,1155,40.9,18.8,11.7,7.1,-4.7,-5.2,-15.8,-18.2,-19.0,-24.0,-34.9];
+  mk('c-comp-growth','bar',{labels:['Codeage','Nutri','Nat Stacks','Bergamot(RSV)','Baush&Lomb','Garden Life','Reserveage','MRM','Nat Factors','Zhou','Country Life','NOW','Youthery'],datasets:[{label:'YoY %',data:gv,backgroundColor:gv.map(v=>v>=0?'rgba(34,197,94,.7)':'rgba(239,68,68,.7)'),borderRadius:2}]},{indexAxis:'y',scales:{x:{grid:{color:'#1e293b'},ticks:{callback:v=>v>1000?'>1K%':v+'%'},max:200,min:-40},y:{grid:{display:false},ticks:{font:{size:9}}}},plugins:{legend:{display:false}}});
+}
+
+// S4: Promo
+function i4(){
+  // Scatter: promo rate vs promo lift
+  mk('c-promo-scatter','scatter',{
+    datasets:[
+      {label:'Rho Nutrition',data:[{x:46.5,y:39.1}],backgroundColor:'#22c55e',pointRadius:8},
+      {label:'MRM/Metabolic',data:[{x:40.1,y:31.4}],backgroundColor:'#f59e0b',pointRadius:6},
+      {label:'Youthery',data:[{x:42.6,y:13.1}],backgroundColor:'#475569',pointRadius:5},
+      {label:'Natural Factors',data:[{x:32.3,y:18.1}],backgroundColor:'#475569',pointRadius:5},
+      {label:'Reserveage',data:[{x:23.0,y:15.5}],backgroundColor:'#7c3aed',pointRadius:8},
+      {label:'Garden of Life',data:[{x:26.7,y:15.7}],backgroundColor:'#475569',pointRadius:5},
+      {label:'Codeage',data:[{x:18.7,y:13.6}],backgroundColor:'#f59e0b',pointRadius:6},
+      {label:'Country Life',data:[{x:24.6,y:19.0}],backgroundColor:'#475569',pointRadius:5},
+    ]
+  },{
+    scales:{
+      x:{title:{display:true,text:'Promo Rate % (% of $ on deal)'},grid:{color:'#1e293b'},min:0,max:60},
+      y:{title:{display:true,text:'Promo Lift Index'},grid:{color:'#1e293b'},min:0,max:50}
+    },
+    plugins:{legend:{position:'right',labels:{boxWidth:8,font:{size:9}}},tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${ctx.raw.x}% promo, ${ctx.raw.y} lift`}}}
+  });
+  // Promo trend at VS by period
+  mk('c-promo-trend','bar',{
+    labels:['4 Weeks','12 Weeks','24 Weeks','YTD'],
+    datasets:[
+      {label:'Promo Rate % (Now)',data:[47.8,44.2,43.5,41.6],backgroundColor:'rgba(124,58,237,.7)',borderRadius:3},
+      {label:'Promo Rate % (YA)',data:[73.5,52.3,52.8,52.7],backgroundColor:'rgba(255,255,255,.15)',borderRadius:3},
+      {label:'Promo Lift (Now)',data:[18.3,30.0,36.5,26.9],backgroundColor:'rgba(34,197,94,.6)',borderRadius:3},
+    ]
+  },{scales:{y:{grid:{color:'#1e293b'},ticks:{callback:v=>v+'%'}},x:{grid:{display:false}}},plugins:{legend:{position:'top'}}});
+}
+
+// S5: Collagen Myth
+function i5(){mk('c-halo','line',{labels:['2020','2021','2022','2023','2024','2025'],datasets:[{label:'Resveratrol (wholesale)',data:[4195697,4373545,4566417,4686746,4088312,4158391],borderColor:'#7c3aed',backgroundColor:'rgba(124,58,237,.06)',fill:true,tension:.4,pointRadius:4,pointBackgroundColor:'#7c3aed'},{label:'Collagen (wholesale)',data:[4703503,4326343,3008162,2210753,1697203,894393],borderColor:'#ef4444',backgroundColor:'rgba(239,68,68,.04)',fill:true,tension:.4,pointRadius:4,borderDash:[6,3],pointBackgroundColor:'#ef4444'}]},{scales:{y:{grid:{color:'#1e293b'},ticks:{callback:v=>'$'+Math.round(v/1e6*10)/10+'M'}},x:{grid:{display:false}}},plugins:{legend:{position:'top'}}});}
+
+// S6: 24W/YTD
+function i6(){
+  mk('c-momentum','bar',{labels:['4W (Latest)','12W','24W','YTD'],datasets:[{label:'$ YoY %',data:[2.5,-0.6,-9.3,-7.5],backgroundColor:['rgba(34,197,94,.75)','rgba(148,163,184,.35)','rgba(239,68,68,.65)','rgba(239,68,68,.65)'],borderRadius:3,borderSkipped:false},{label:'TDP YoY %',data:[-7.0,-5.2,-9.0,-8.8],backgroundColor:'rgba(239,68,68,.25)',borderRadius:3,borderSkipped:false}]},{scales:{y:{grid:{color:'#1e293b'},ticks:{callback:v=>v+'%'}},x:{grid:{display:false}}},plugins:{legend:{position:'top'}}});
+  mk('c-monthly-b2b','line',{labels:['Jan','Feb','Mar','Apr','May','Jun'],datasets:[{label:'2024',data:[315078,324188,310958,415599,234843,160184],borderColor:'#475569',tension:.4,pointRadius:3,borderDash:[4,2]},{label:'2025',data:[485869,386245,437829,459602,212022,191796],borderColor:'#7c3aed',tension:.4,pointRadius:3,pointBackgroundColor:'#7c3aed'},{label:'2026',data:[234502,191016,174469,256649,250402,49265],borderColor:'#ef4444',tension:.4,pointRadius:3,pointBackgroundColor:'#ef4444'}]},{scales:{y:{grid:{color:'#1e293b'},ticks:{callback:v=>'$'+Math.round(v/1000)+'K'}},x:{grid:{display:false}}},plugins:{legend:{position:'top'}}});
+  mk('c-cat-windows','bar',{labels:['4W','12W','24W','YTD'],datasets:[{label:'Category YoY %',data:[37.5,34.3,21.2,26.2],backgroundColor:'rgba(34,197,94,.55)',borderRadius:3},{label:'Reserveage YoY %',data:[2.5,-0.6,-9.3,-7.5],backgroundColor:'rgba(124,58,237,.65)',borderRadius:3}]},{scales:{y:{grid:{color:'#1e293b'},ticks:{callback:v=>v+'%'}},x:{grid:{display:false}}},plugins:{legend:{position:'top'}}});
+}
+
+// S7: SKU
+const SD={'24w':{l:'24 Weeks',s:[{n:'500mg 60ct',d:73183,dy:93572,tdp:-42.2,vel:35.2},{n:'250mg 60ct',d:66267,dy:74294,tdp:-9.1,vel:-1.9},{n:'500mg 30ct',d:45350,dy:59401,tdp:-16.0,vel:-9.1},{n:'Bergamot Chol.',d:44717,dy:41330,tdp:1.5,vel:6.6},{n:'250mg 30ct',d:31283,dy:37399,tdp:-10.6,vel:-6.4},{n:'RSV+Pterostilb.',d:29562,dy:33393,tdp:-16.7,vel:6.2},{n:'100mg Gummies',d:21096,dy:24537,tdp:-20.5,vel:8.2},{n:'100mg 60ct',d:14693,dy:15381,tdp:-30.4,vel:37.3},{n:'NAD+Resv Plus',d:11409,dy:null,tdp:null,vel:null},{n:'RSV Plus 1000mg',d:8576,dy:3579,tdp:386.2,vel:-50.7},{n:'RSV Plus 500mg',d:3093,dy:1748,tdp:150.0,vel:-29.2}]},'ytd':{l:'YTD',s:[{n:'500mg 60ct',d:62685,dy:76106,tdp:-42.2,vel:42.4},{n:'250mg 60ct',d:57219,dy:65469,tdp:-9.1,vel:-3.9},{n:'500mg 30ct',d:38124,dy:49580,tdp:-16.0,vel:-8.5},{n:'Bergamot Chol.',d:37568,dy:35614,tdp:1.5,vel:4.0},{n:'250mg 30ct',d:25952,dy:29211,tdp:-10.6,vel:-0.6},{n:'RSV+Pterostilb.',d:24938,dy:27214,tdp:-16.7,vel:10.0},{n:'100mg Gummies',d:18006,dy:20551,tdp:-20.5,vel:10.2},{n:'100mg 60ct',d:12534,dy:13844,tdp:-30.4,vel:30.1},{n:'NAD+Resv Plus',d:11167,dy:null,tdp:null,vel:null},{n:'RSV Plus 1000mg',d:7701,dy:3459,tdp:386.2,vel:-54.2},{n:'RSV Plus 500mg',d:2806,dy:1560,tdp:150.0,vel:-28.1}]},'12w':{l:'12 Weeks',s:[{n:'500mg 60ct',d:38009,dy:42690,tdp:-42.2,vel:30},{n:'250mg 60ct',d:32966,dy:39719,tdp:-9.1,vel:-4},{n:'500mg 30ct',d:24766,dy:27546,tdp:-16.0,vel:-4},{n:'Bergamot Chol.',d:23038,dy:20992,tdp:1.5,vel:8},{n:'RSV+Pterostilb.',d:15502,dy:15886,tdp:-16.7,vel:5},{n:'250mg 30ct',d:15260,dy:17268,tdp:-10.6,vel:0},{n:'100mg Gummies',d:11409,dy:11726,tdp:-20.5,vel:10},{n:'NAD+Resv Plus',d:10763,dy:null,tdp:null,vel:null},{n:'100mg 60ct',d:7427,dy:8467,tdp:-30.4,vel:25},{n:'RSV Plus 1000mg',d:5776,dy:2394,tdp:386.2,vel:-55},{n:'RSV Plus 500mg',d:2023,dy:1237,tdp:150.0,vel:-25}]},'4w':{l:'4 Weeks (Latest)',s:[{n:'500mg 60ct',d:13636,dy:12658,tdp:-42.2,vel:16},{n:'250mg 60ct',d:10487,dy:13720,tdp:-9.1,vel:-14},{n:'500mg 30ct',d:7725,dy:8546,tdp:-16.0,vel:0},{n:'Bergamot Chol.',d:7547,dy:5956,tdp:1.5,vel:25},{n:'250mg 30ct',d:5189,dy:6214,tdp:-10.6,vel:-7},{n:'RSV+Pterostilb.',d:5069,dy:5420,tdp:-16.7,vel:8},{n:'NAD+Resv Plus',d:3726,dy:null,tdp:null,vel:null},{n:'100mg Gummies',d:3704,dy:3381,tdp:-20.5,vel:16},{n:'100mg 60ct',d:2673,dy:3448,tdp:-30.4,vel:18},{n:'RSV Plus 1000mg',d:1182,dy:499,tdp:386.2,vel:-55},{n:'RSV Plus 500mg',d:818,dy:407,tdp:150.0,vel:-22}]}};
+let SC={};
+function diag(tdp,vel,dc){if(dc===null)return['pp','NEW ✦'];if(tdp===null)return dc>0?['pg','Growing']:['pm','Stable'];if(tdp<-10&&vel>5)return['pp','Distrib. loss'];if(tdp<-5&&vel<-5)return['pr','Both weak'];if(tdp>0&&vel>0)return['pg','Both strong'];if(vel>10&&tdp<0)return['pt','Vel. driven'];return['pm','Mixed'];}
+function switchSku(k){document.querySelectorAll('#sku-tg button').forEach(b=>{b.classList.remove('on');if(b.onclick&&b.onclick.toString().includes("'"+k+"'")){b.classList.add('on');}});document.getElementById('sku-plabel').textContent=SD[k].l;rST(k);rSC(k);}
+function rST(k){const tb=document.getElementById('sku-tbody');tb.innerHTML='';SD[k].s.forEach(s=>{const dc=s.dy?(s.d-s.dy)/s.dy*100:null;const[pc,lbl]=diag(s.tdp,s.vel,dc);const tr=document.createElement('tr');tr.innerHTML=`<td style="font-size:9px">${s.n}</td><td>$${s.d.toLocaleString()}</td><td>${s.dy?'$'+s.dy.toLocaleString():'—'}</td><td style="color:${dc===null?'#94a3b8':dc>=0?'#22c55e':'#ef4444'}">${dc===null?'NEW':dc.toFixed(1)+'%'}</td><td style="color:${s.tdp===null?'#94a3b8':s.tdp>=0?'#22c55e':'#ef4444'}">${s.tdp===null?'NEW':s.tdp.toFixed(1)+'%'}</td><td style="color:${s.vel===null?'#94a3b8':s.vel>=0?'#22c55e':'#ef4444'}">${s.vel===null?'NEW':s.vel.toFixed(1)+'%'}</td><td><span class="pill ${pc}">${lbl}</span></td>`;tb.appendChild(tr);});}
+function rSC(k){const d=SD[k],labs=d.s.map(s=>s.n.length>12?s.n.substr(0,12)+'…':s.n),cols=['#7c3aed','#6d28d9','#5b21b6','#22c55e','#4c1d95','#4338ca','#f59e0b','#06b6d4','#22d3ee','#34d399','#a78bfa'];if(SC.mix)SC.mix.destroy();if(SC.yoy)SC.yoy.destroy();SC.mix=mk('c-sku-mix','bar',{labels:labs,datasets:[{label:'$',data:d.s.map(s=>s.d),backgroundColor:cols.map(c=>c+'cc'),borderRadius:2}]},{indexAxis:'y',scales:{x:{grid:{color:'#1e293b'},ticks:{callback:v=>'$'+Math.round(v/1000)+'K'}},y:{grid:{display:false},ticks:{font:{size:9}}}},plugins:{legend:{display:false}}});const yd=d.s.map(s=>s.dy?(s.d-s.dy)/s.dy*100:null);SC.yoy=mk('c-sku-yoy','bar',{labels:labs,datasets:[{label:'$ YoY %',data:yd,backgroundColor:yd.map(v=>v===null?'#475569':v>=0?'rgba(34,197,94,.7)':'rgba(239,68,68,.7)'),borderRadius:2}]},{indexAxis:'y',scales:{x:{grid:{color:'#1e293b'},ticks:{callback:v=>v+'%'}},y:{grid:{display:false},ticks:{font:{size:9}}}},plugins:{legend:{display:false}}});}
+function i7(){rST('24w');rSC('24w');}
+
+// S8: Other Categories
+function i8(){mk('c-coll-skus','bar',{labels:['Collagen Boost60','Tres Beauty3','Beautiful Legs','Keratin BiotinRsv','Collag Rplsh120','Resv 1000mg','Ultra Colg90','CoQ10','Collagen Chews'],datasets:[{label:'Now $',data:[63323,53961,51886,49267,36516,33504,7272,7205,4531],backgroundColor:'#7c3aed',borderRadius:2},{label:'YA $',data:[76515,63728,45756,67206,38723,38699,18010,21166,118226],backgroundColor:'rgba(255,255,255,.09)',borderRadius:2}]},{indexAxis:'y',scales:{x:{grid:{color:'#1e293b'},ticks:{callback:v=>'$'+Math.round(v/1000)+'K'}},y:{grid:{display:false},ticks:{font:{size:9}}}},plugins:{legend:{position:'top'}}});}
+
+// ============ GLOBAL TIME FILTER ============
+const DATA_PERIODS = {
+  "52w": {label:"52 Weeks ending 05/17/2026",
+    rsv_tvs:1452770, rsv_tvs_ya:1698159, rsv_tvs_unit:31609, rsv_tvs_unit_ya:39387,
+    rsv_loss:-245390, tvs_promo:34.6, tvs_promo_ya:43.5, tvs_lift:39.8,
+    tvs_brands_d:[2541530,1452770,456254,424847,407117,319959,319028,311820,247479,213879,182672,148184,138721,129941,127610],
+    tvs_brands_d_ya:[2264689,1698159,289024,297500,612551,0,374792,212597,166173,257787,414868,9099,79254,-495,154383],
+    tvs_brands_u:[58374,31609,12153,10938,10257,7466,9779,8570,10821,6667,6359,4056,5054,2165,3390],
+    tvs_brands_u_ya:[51856,39387,8351,8315,17124,0,11311,6216,8510,7677,14253,263,3777,-10,4030],
+    tvs_lbl:["Life Extension","Reserveage","Nutrex Hawaii","Solgar","Jarrow","Rho Nutrition","Solaray","Cymbiotika","Force Factor","Doctors Best","Zhou","Nutri","Garden Life","Codeage","Lifeseasons"],
+    bullets:[
+      {i:"🔴",t:"Reserveage lost −$245K at TVS (52W) while new entrants gained +$964K. Rho (+$320K), Nutrex (+$167K), Nutri (+$139K), Codeage (+$130K), Solgar (+$127K) all grew."},
+      {i:"🔴",t:"TVS gummies confirmed DELISTED: $57.5K (2YA) → $12.4K (YA) → $25 (now). TDP 49 → 0.04. Force Factor entered same slot with RSV Soft Chews."},
+      {i:"🔴",t:"Rho Nutrition entered TVS at $320K from zero — now #3 brand at TVS by $ in under one year. Unit velocity: Rho 36 units/TDP vs Reserveage 19 units/TDP."},
+      {i:"🟡",t:"500mg 60ct TDP at TVS fell from 53.7 → 35.6 (−33.8%). But velocity +11.1% where stocked — distribution problem, not demand failure."},
+      {i:"🟢",t:"TVS.com growing +3.5% ($353K vs $341K YA). Digital channel healthy — physical planogram is the problem."},
+      {i:"🟢",t:"Innovation gaining: NAD+Resveratrol $141K new at TVS, RSV Plus 1000mg +8.1%, Bergamot +11.1%."},
+    ]},
+  "24w": {label:"24 Weeks ending 05/17/2026",
+    rsv_tvs:630052, rsv_tvs_ya:812355, rsv_tvs_unit:13694, rsv_tvs_unit_ya:19484,
+    rsv_loss:-182303, tvs_promo:43.5, tvs_promo_ya:52.8, tvs_lift:36.5,
+    tvs_brands_d:[1141505,630052,319959,269960,212557,171845,143406,139206,123865,109100],
+    tvs_brands_d_ya:[1375315,812355,0,148026,149329,245443,176331,121600,-286,118219],
+    tvs_brands_u:[26323,13694,7466,7337,5541,3647,4141,5226,2059,3616],
+    tvs_brands_u_ya:[30717,19484,0,4248,4096,6609,5315,6312,-4,2973],
+    tvs_lbl:["Life Extension","Reserveage","Rho Nutrition","Nutrex Hawaii","Solgar","Jarrow","Solaray","Force Factor","Codeage","Cymbiotika"],
+    bullets:[
+      {i:"🔴",t:"Reserveage lost −$182K at TVS in 24W. Nutrex (+$122K), Codeage (+$124K), Solgar (+$63K) all gained."},
+      {i:"🔴",t:"Promo rate fell from 52.8% (YA) to 43.5% but lift remained 36.5%. Reducing promo without TDP support accelerated decline."},
+      {i:"🔴",t:"Unit volume down −29.7% (13,694 vs 19,484 YA). ARP increase to $45 softens dollar decline — units tell the real story."},
+      {i:"🟡",t:"Rho Nutrition: $320K in 24W from zero — displacing Reserveage as #2 at TVS in this window."},
+      {i:"🟢",t:"Innovation tier growing even as core RSV declines: NAD+Resveratrol, Bergamot, RSV Plus 500mg all positive."},
+    ]},
+  "ytd": {label:"YTD Jan–May 2026",
+    rsv_tvs:506732, rsv_tvs_ya:665308, rsv_tvs_unit:11022, rsv_tvs_unit_ya:15940,
+    rsv_loss:-158575, tvs_promo:41.6, tvs_promo_ya:52.7, tvs_lift:26.9,
+    tvs_brands_d:[964331,506732,319959,243482,180894,144219,122776,119628,117892,85334],
+    tvs_brands_d_ya:[1181842,665308,0,126815,128953,206466,147729,-286,104753,82632],
+    tvs_brands_u:[22299,11022,7466,6676,4679,3052,3577,1992,4334,2524],
+    tvs_brands_u_ya:[26520,15940,0,3646,3513,5590,4468,-4,5328,2390],
+    tvs_lbl:["Life Extension","Reserveage","Rho Nutrition","Nutrex Hawaii","Solgar","Jarrow","Solaray","Codeage","Force Factor","Doctors Best"],
+    bullets:[
+      {i:"🔴",t:"Reserveage YTD TVS: −$158.6K vs YA (−23.8%). Promo rate biggest drop: 52.7% → 41.6%."},
+      {i:"🔴",t:"Units down −30.8% (11,022 vs 15,940). Rho at $320K YTD from zero — on track to exceed Reserveage in next full 52W."},
+      {i:"🔴",t:"Codeage exploded YTD: $120K from nearly zero. Promo lift at TVS: 91% — highest in category."},
+      {i:"🟡",t:"Life Extension declining too (−$218K YTD) — broader TVS antioxidant category facing headwinds, not just Reserveage."},
+      {i:"🟢",t:"Force Factor stable at TVS (+$13K), entering with RSV Soft Chews in gummies slot Reserveage vacated."},
+    ]},
+  "4w": {label:"4 Weeks ending 05/17/2026 (Latest)",
+    rsv_tvs:91731, rsv_tvs_ya:108176, rsv_tvs_unit:2098, rsv_tvs_unit_ya:2755,
+    rsv_loss:-16445, tvs_promo:47.8, tvs_promo_ya:73.5, tvs_lift:18.3,
+    tvs_brands_d:[167164,96455,91731,56841,40266,29283,25632,25403,22511,20367],
+    tvs_brands_d_ya:[199969,0,108176,24771,29227,35367,2,27460,20088,0],
+    tvs_brands_u:[3655,2101,2098,1542,1051,624,413,690,825,544],
+    tvs_brands_u_ya:[4232,0,2755,701,813,1038,-1,891,1167,0],
+    tvs_lbl:["Life Extension","Rho Nutrition","Reserveage","Nutrex Hawaii","Solgar","Jarrow","Codeage","Solaray","Force Factor","Qunol"],
+    bullets:[
+      {i:"🟢",t:"Natural channel $ turns POSITIVE: +2.5% YoY in 4W — first positive signal. Stabilization may be underway."},
+      {i:"🔴",t:"TVS 4W: Rho $96.5K vs Reserveage $91.7K — Rho has now SURPASSED Reserveage in the most recent 4-week period at TVS."},
+      {i:"🔴",t:"SPINS Brand Insights (12W): Unit velocity (units/TDP) is the primary driver — down 28.5% from 26 to 19 units/TDP at TVS. Distribution (TDP −5.1%) is secondary."},
+      {i:"🟡",t:"Promo rate cut to 47.8% vs 73.5% YA. ARP up +9.7% to $45.15 — pricing power intact even as volume falls."},
+      {i:"🟢",t:"Rho at TVS: 195 TDP, 36 units/TDP, $42.98 ARP. Reserveage: 356 TDP, 19 units/TDP, $45.15 ARP. Rho wins on velocity; Reserveage wins on distribution and price."},
+    ]}
+};
+
+let gFilter = "52w";
+const filterSlides = [0,1,2,3,4];
+
+function setFilter(f) {
+  gFilter = f;
+  document.querySelectorAll(".fb").forEach(b => {
+    b.classList.toggle("active", b.getAttribute("onclick")&&b.getAttribute("onclick").includes("'"+f+"'"));
+  });
+  document.getElementById("filter-note").textContent = "Showing: " + DATA_PERIODS[f].label;
+  updateDynamic(f);
+}
+
+function updateDynamic(f) {
+  const d = DATA_PERIODS[f];
+  
+  // Update TVS kpi row
+  const tvsKpi = document.getElementById("tvs-kpi-dyn");
+  if(tvsKpi) {
+    const upct = d.rsv_tvs_unit_ya>0?((d.rsv_tvs_unit-d.rsv_tvs_unit_ya)/d.rsv_tvs_unit_ya*100).toFixed(1):"—";
+    const dpct = d.rsv_tvs_ya>0?((d.rsv_tvs-d.rsv_tvs_ya)/d.rsv_tvs_ya*100).toFixed(1):"—";
+    tvsKpi.innerHTML = `
+      <div class="kpi"><div class="lbl">TVS $ (${f.toUpperCase()})</div><div class="val red">$${Math.round(d.rsv_tvs/1000)}K</div><div class="sub red">▼ ${dpct}% YoY</div></div>
+      <div class="kpi"><div class="lbl">TVS Units</div><div class="val red">${d.rsv_tvs_unit.toLocaleString()}</div><div class="sub red">▼ ${upct}% YoY</div></div>
+      <div class="kpi"><div class="lbl">Promo Rate Now</div><div class="val gold">${d.tvs_promo}%</div><div class="sub red">was ${d.tvs_promo_ya}% YA</div></div>
+      <div class="kpi"><div class="lbl">Promo Lift</div><div class="val purple">${d.tvs_lift}</div><div class="sub green">Works when used</div></div>`;
+  }
+
+  // Update TVS comp note
+  const tvsCompNote = document.getElementById("tvs-comp-dyn");
+  if(tvsCompNote) tvsCompNote.textContent = "Showing " + d.label + " — use time filter above to change period.";
+
+  // Update comp KPI
+  const compKpi = document.getElementById("comp-kpi-dyn");
+  if(compKpi) {
+    const dpct = d.rsv_tvs_ya>0?((d.rsv_tvs-d.rsv_tvs_ya)/d.rsv_tvs_ya*100).toFixed(1):"—";
+    compKpi.innerHTML = `
+      <div class="kpi"><div class="lbl">Reserveage TVS (${f.toUpperCase()})</div><div class="val red">$${Math.round(d.rsv_tvs/1000)}K</div><div class="sub red">▼${dpct}% | Lost: $${Math.round(Math.abs(d.rsv_loss)/1000)}K</div></div>
+      <div class="kpi"><div class="lbl">Rho Nutrition TVS</div><div class="val green">$320K</div><div class="sub green">▲ NEW — from zero</div></div>
+      <div class="kpi"><div class="lbl">Competitors Gained</div><div class="val green">+$964K</div><div class="sub green">52W reference</div></div>`;
+  }
+
+  // Bullet insights
+  const bullEl = document.getElementById("tvs-bullets");
+  if(bullEl && d.bullets) {
+    bullEl.innerHTML = d.bullets.map(b=>`<li><span class="bi-icon">${b.i}</span>${b.t}</li>`).join("");
+  }
+
+  // Rebuild TVS competitor charts
+  rebuildTVSCharts(d);
+
+  // Update distrib note
+  const distNote = document.getElementById("distrib-dyn");
+  if(distNote) distNote.textContent = "Selected: " + d.label + ". TDP/velocity decomposition reflects 52W structural diagnosis.";
+
+  // Update nat note
+  const natNote = document.getElementById("nat-dyn");
+  if(natNote) natNote.textContent = "Selected: " + d.label + ". Charts show 52W category view.";
+}
+
+let tvsChartD, tvsChartU;
+function rebuildTVSCharts(d) {
+  const cD = document.getElementById("c-tvs-comp-dollar");
+  const cU = document.getElementById("c-tvs-comp-unit");
+  if(!cD || !cU) return;
+  if(tvsChartD) tvsChartD.destroy();
+  if(tvsChartU) tvsChartU.destroy();
+  const ml = 13;
+  const lbDs = d.tvs_lbl.map(l=>l.length>ml?l.substr(0,ml)+"…":l);
+  const bColors = d.tvs_lbl.map(l=>l==="Reserveage"?"#7c3aed":l.includes("Rho")?"#22c55e":l.includes("Force")||l.includes("Code")||l.includes("Nutri")?"#f59e0b":"#475569");
+  tvsChartD = new Chart(cD,{type:"bar",data:{labels:lbDs,datasets:[{label:"Current $",data:d.tvs_brands_d,backgroundColor:bColors,borderRadius:2},{label:"Year Ago $",data:d.tvs_brands_d_ya,backgroundColor:"rgba(255,255,255,.08)",borderRadius:2}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:"y",scales:{x:{grid:{color:"#1e293b"},ticks:{callback:v=>"$"+Math.round(v/1000)+"K",font:{size:9}}},y:{grid:{display:false},ticks:{font:{size:8}}}},plugins:{legend:{labels:{boxWidth:8,font:{size:9}}}}}});
+  tvsChartU = new Chart(cU,{type:"bar",data:{labels:lbDs,datasets:[{label:"Units Now",data:d.tvs_brands_u,backgroundColor:bColors,borderRadius:2},{label:"Units YA",data:d.tvs_brands_u_ya,backgroundColor:"rgba(255,255,255,.08)",borderRadius:2}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:"y",scales:{x:{grid:{color:"#1e293b"},ticks:{font:{size:9}}},y:{grid:{display:false},ticks:{font:{size:8}}}},plugins:{legend:{labels:{boxWidth:8,font:{size:9}}}}}});
+}
+
+// Init filter
+updateDynamic("52w");
+</script>
+</body>
+</html>
